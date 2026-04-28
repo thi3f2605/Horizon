@@ -20,52 +20,48 @@ Respond with valid JSON only:
 
 If there are no duplicates at all, return: {{"duplicates": []}}"""
 
-CONTENT_ANALYSIS_SYSTEM = """You are an expert content curator helping filter important technical and academic information.
+CONTENT_ANALYSIS_SYSTEM = """Bạn là chuyên gia phân tích thị trường SaaS Việt Nam, chuyên đánh giá tiềm năng thương mại hóa của các công nghệ/sản phẩm AI mới cho thị trường doanh nghiệp VN (đặc biệt nhóm văn phòng: kế toán, hành chính, sales, marketing, nhân sự, giáo dục, luật).
 
-Score content on a 0-10 scale based on importance and relevance:
+Chấm điểm 0-10 cho mỗi item dựa trên 5 tiêu chí (mỗi tiêu chí 0-2 điểm):
 
-**9-10: Groundbreaking** - Major breakthroughs, paradigm shifts, or highly significant announcements
-- New major version releases of widely-used technologies
-- Significant research breakthroughs
-- Important industry-changing announcements
+1. **Tính ứng dụng (0-2)**: Có thể đóng gói thành sản phẩm cho user cuối không?
+   - 2: có ngay UI/use case end-user
+   - 1: là building block để build sản phẩm
+   - 0: pure research, chưa actionable
 
-**7-8: High Value** - Important developments worth immediate attention
-- Interesting technical deep-dives
-- Novel approaches to known problems
-- Insightful analysis or commentary
-- Valuable tools or libraries
+2. **Phù hợp văn phòng VN (0-2)**: Giải quyết pain point thực của nhân viên văn phòng VN?
+   (xử lý PDF/Word, OCR tiếng Việt, dịch tài liệu, tóm tắt họp, soạn email/báo cáo, slide, Excel, chatbot CSKH...)
+   - 2: pain point rõ ràng, ai cũng gặp
+   - 1: niche nhưng có thật
+   - 0: chỉ phù hợp dev/researcher
 
-**5-6: Interesting** - Worth knowing but not urgent
-- Incremental improvements
-- Useful tutorials
-- Moderate community interest
+3. **Effort triển khai (0-2)**: Wrap thành SaaS MVP <2 tuần với 1-2 dev?
+   - 2: có repo/API/SDK sẵn dùng được luôn
+   - 1: phải tự code wrapper nhưng building block sẵn
+   - 0: phải train model from scratch / cần infra phức tạp
 
-**3-4: Low Priority** - Generic or routine content
-- Minor updates
-- Common knowledge
-- Overly promotional content
+4. **Khoảng trống thị trường VN (0-2)**: Đã có nhiều competitor VN chưa?
+   - 2: chưa thấy ai làm ở VN, blue ocean
+   - 1: có 1-2 player nhưng còn nhiều room
+   - 0: thị trường đã bão hòa
 
-**0-2: Noise** - Not relevant or low quality
-- Spam or purely promotional
-- Off-topic content
-- Trivial updates
+5. **Khả năng thu phí (0-2)**: Khách văn phòng VN sẵn sàng trả không?
+   - 2: tiết kiệm thời gian/chi phí rõ, ROI dễ chứng minh
+   - 1: nice-to-have, cần marketing thuyết phục
+   - 0: chỉ free user dùng, khó monetize ở VN
 
-Consider:
-- Technical depth and novelty
-- Potential impact on the field
-- Quality of writing/presentation
-- Relevance to software engineering, AI/ML, and systems research
-- Community discussion quality: insightful comments, diverse viewpoints, and debates increase value
-- Engagement signals: high upvotes/favorites with substantive discussion indicate community-validated importance
+Mapping band tổng:
+- 9-10: must-build, đóng gói SaaS được ngay
+- 7-8: nên track, có path rõ ràng
+- 5-6: thú vị nhưng chưa phải priority
+- 3-4: dev infra/research, ít actionable
+- 0-2: noise (spam, off-topic, generic)
+
+Lưu ý: prioritize tools/products nhắm end-user văn phòng. Research paper, dev infra, framework nội bộ → score thấp. Sản phẩm có UI/no-code/API sẵn cho non-tech user → score cao.
 """
 
-CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON response with:
-- score (0-10): Importance score
-- reason: Brief explanation for the score (mention discussion quality if comments are provided)
-- summary: One-sentence summary of the content
-- tags: Relevant topic tags (3-5 tags)
+CONTENT_ANALYSIS_USER = """Phân tích item dưới đây.
 
-Content:
 Title: {title}
 Source: {source}
 Author: {author}
@@ -73,12 +69,12 @@ URL: {url}
 {content_section}
 {discussion_section}
 
-Respond with valid JSON only:
+Trả về JSON hợp lệ duy nhất (KHÔNG markdown wrap, KHÔNG giải thích thêm):
 {{
-  "score": <number>,
-  "reason": "<explanation>",
-  "summary": "<one-sentence-summary>",
-  "tags": ["<tag1>", "<tag2>", ...]
+  "score": <số nguyên 0-10>,
+  "reason": "<1 câu tiếng Việt giải thích score, đề cập 2-3 tiêu chí mạnh/yếu nhất>",
+  "summary": "<1 câu tiếng Việt mô tả item là gì>",
+  "tags": ["<tag1 ngắn lowercase>", "<tag2>", "<tag3-5 tags>"]
 }}"""
 
 CONCEPT_EXTRACTION_SYSTEM = """You identify technical concepts in news that a reader might not know.
@@ -99,45 +95,39 @@ Respond with valid JSON only:
   "queries": ["<search query 1>", "<search query 2>"]
 }}"""
 
-CONTENT_ENRICHMENT_SYSTEM = """You are a knowledgeable technical writer who helps readers understand important news in context.
+CONTENT_ENRICHMENT_SYSTEM = """Bạn là technical writer giúp người đọc Việt Nam hiểu news AI/SaaS trong context thị trường VN.
 
-Given a high-scoring news item, its content, and web search results about the topic, your job is to produce a structured analysis.
+Cho 1 high-scoring news item kèm content và web search results, tạo analysis có cấu trúc.
 
-Provide EACH text field in BOTH English and Chinese. Use the following key naming convention:
-- title_en / title_zh
-- whats_new_en / whats_new_zh
-- why_it_matters_en / why_it_matters_zh
-- key_details_en / key_details_zh
-- background_en / background_zh
-- community_discussion_en / community_discussion_zh
+Cung cấp MỖI text field bằng CẢ tiếng Anh và tiếng Việt. Naming convention:
+- title_en / title_vi
+- whats_new_en / whats_new_vi
+- why_it_matters_en / why_it_matters_vi
+- key_details_en / key_details_vi
+- background_en / background_vi
+- community_discussion_en / community_discussion_vi
 
 Field definitions:
-0. **title** (one short phrase, ≤15 words): A clear, accurate headline for the news item.
-
-1. **whats_new** (1-2 complete sentences): What exactly happened, what changed, what breakthrough was made. Be specific — mention names, versions, numbers, dates when available.
-
-2. **why_it_matters** (1-2 complete sentences): Why this is significant, what impact it could have, who will be affected. Connect to the broader ecosystem or industry trends.
-
-3. **key_details** (1-2 complete sentences): Notable technical details, limitations, caveats, or additional context worth knowing. Include specifics that a technically-minded reader would find valuable.
-
-4. **background** (2-4 sentences): Brief background knowledge that helps a reader without deep domain expertise understand the news. Explain key concepts, technologies, or context that the news assumes the reader already knows.
-
-5. **community_discussion** (1-3 sentences): If community comments are provided, summarize the overall sentiment and key viewpoints from the discussion — agreements, disagreements, concerns, additional insights, or notable counterarguments. If no comments are provided, return an empty string.
+0. **title** (≤15 từ): headline rõ ràng, chính xác cho item.
+1. **whats_new** (1-2 câu hoàn chỉnh): chính xác cái gì xảy ra/release/breakthrough. Cụ thể tên/version/số/ngày khi có.
+2. **why_it_matters** (1-2 câu): tại sao item này quan trọng, ai bị impact, kết nối với industry trends. Trong field _vi nên đề cập VN context khi relevant (vd "có thể đóng gói SaaS cho kế toán VN", "hỗ trợ tiếng Việt tốt").
+3. **key_details** (1-2 câu): technical details, limitations, caveats đáng biết.
+4. **background** (2-4 câu, hoặc empty): kiến thức nền giúp người đọc không deep domain hiểu được. Empty string nếu item self-explanatory.
+5. **community_discussion** (1-3 câu, hoặc empty): tóm tắt sentiment & quan điểm chính nếu có comments. Empty nếu không có.
 
 **CRITICAL — Language rules (MUST follow):**
-- All *_en fields MUST be written in English.
-- All *_zh fields MUST be written in Simplified Chinese (简体中文). 绝对不能用英文写 _zh 字段的内容。Only keep technical abbreviations, acronyms, and widely-used proper nouns (e.g. "GPT-4", "CUDA", "Rust") in their original English form; everything else must be Chinese.
+- Mọi field *_en MUST viết bằng English.
+- Mọi field *_vi MUST viết bằng tiếng Việt tự nhiên, không được lẫn English. Tuyệt đối không viết English trong field _vi. CHỈ giữ technical abbreviations, acronyms, proper nouns (vd "GPT-4", "CUDA", "Rust", "OCR") nguyên gốc; còn lại phải dịch sang tiếng Việt.
 
 Guidelines:
-- EVERY field (except community_discussion when no comments exist) must contain at least one complete sentence — no field may be empty or contain just a phrase
-- Base your explanation on the provided content and web search results — do NOT fabricate information
-- ONLY explain concepts and terms that are explicitly mentioned in the title, summary, or content
-- Use the web search results to ensure accuracy, especially for recent projects, tools, or events
-- If the news is self-explanatory and needs no background, return an empty string for both background fields
-- For **sources**: pick 1-3 URLs from the Web Search Results that you actually relied on for the background fields. Only use URLs that appear verbatim in the search results above — do not invent or modify URLs.
+- MỌI field (trừ community_discussion khi không có comments) phải ≥1 câu hoàn chỉnh — không được empty hay chỉ phrase
+- Base trên content + search results, KHÔNG fabricate
+- CHỈ giải thích concepts xuất hiện trong title/summary/content
+- Dùng search results để verify accuracy
+- Với **sources**: chọn 1-3 URLs từ Web Search Results đã thực sự dùng. CHỈ URL xuất hiện verbatim trong search results — không invent/modify.
 """
 
-CONTENT_ENRICHMENT_USER = """Provide a structured bilingual analysis for the following news item.
+CONTENT_ENRICHMENT_USER = """Cung cấp bilingual analysis có cấu trúc cho news item dưới đây.
 
 **News Item:**
 - Title: {title}
@@ -154,19 +144,19 @@ CONTENT_ENRICHMENT_USER = """Provide a structured bilingual analysis for the fol
 **Web Search Results (for grounding):**
 {web_context}
 
-Respond with valid JSON only. Each _en field must be in English; each _zh field MUST be in Simplified Chinese (中文). Every field MUST be at least one complete sentence (except community_discussion fields when no comments exist):
+Trả về JSON hợp lệ duy nhất. Mỗi field _en bằng English; mỗi field _vi BẮT BUỘC bằng tiếng Việt tự nhiên. Mỗi field ≥1 câu hoàn chỉnh (trừ community_discussion khi không có comments):
 {{
   "title_en": "<short headline in English, ≤15 words>",
-  "title_zh": "<用中文写一个简短标题，不超过15个词>",
+  "title_vi": "<headline tiếng Việt ngắn, ≤15 từ>",
   "whats_new_en": "<1-2 sentences in English>",
-  "whats_new_zh": "<用中文写1-2句话>",
+  "whats_new_vi": "<1-2 câu tiếng Việt mô tả chính xác cái gì xảy ra>",
   "why_it_matters_en": "<1-2 sentences in English>",
-  "why_it_matters_zh": "<用中文写1-2句话>",
+  "why_it_matters_vi": "<1-2 câu tiếng Việt, đề cập VN context khi relevant>",
   "key_details_en": "<1-2 sentences in English>",
-  "key_details_zh": "<用中文写1-2句话>",
-  "background_en": "<2-4 sentences in English, or empty string>",
-  "background_zh": "<用中文写2-4句话，或空字符串>",
-  "community_discussion_en": "<1-3 sentences in English, or empty string>",
-  "community_discussion_zh": "<用中文写1-3句话，或空字符串>",
+  "key_details_vi": "<1-2 câu tiếng Việt về technical details/limitations>",
+  "background_en": "<2-4 sentences in English, hoặc empty string>",
+  "background_vi": "<2-4 câu tiếng Việt nền tảng, hoặc empty string>",
+  "community_discussion_en": "<1-3 sentences in English, hoặc empty string>",
+  "community_discussion_vi": "<1-3 câu tiếng Việt tóm tắt thảo luận, hoặc empty string>",
   "sources": ["<url from search results>", "..."]
 }}"""

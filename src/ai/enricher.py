@@ -140,7 +140,9 @@ class ContentEnricher:
                 content_text = item.content[:4000]
 
         # Step 1: AI identifies concepts to explain
-        queries = await self._extract_concepts(item, content_text)
+        # DISABLED in VN radar Giai đoạn 1 — saves ~30-40% tokens; owner is dev-savvy
+        # queries = await self._extract_concepts(item, content_text)
+        queries = []
 
         # Step 2: Search web for each concept
         all_results = []
