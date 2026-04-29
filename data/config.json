@@ -32,8 +32,8 @@
     ],
     "hackernews": {
       "enabled": true,
-      "fetch_top_stories": 30,
-      "min_score": 80
+      "fetch_top_stories": 15,
+      "min_score": 100
     },
     "rss": [
       { "name": "Simon Willison",   "url": "https://simonwillison.net/atom/everything/", "enabled": true,  "category": "ai-tools" },
@@ -48,15 +48,15 @@
     "reddit": {
       "enabled": true,
       "subreddits": [
-        { "subreddit": "MachineLearning",        "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 25, "min_score": 50 },
-        { "subreddit": "LocalLLaMA",             "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 25, "min_score": 30 },
-        { "subreddit": "OpenAI",                 "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 50 },
-        { "subreddit": "ChatGPT",                "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 100 },
-        { "subreddit": "SaaS",                   "enabled": true, "sort": "top", "time_filter": "day", "fetch_limit": 15, "min_score": 30 },
-        { "subreddit": "EntrepreneurRideAlong",  "enabled": true, "sort": "top", "time_filter": "day", "fetch_limit": 15, "min_score": 20 }
+        { "subreddit": "MachineLearning",        "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 10, "min_score": 100 },
+        { "subreddit": "LocalLLaMA",             "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 10, "min_score": 50 },
+        { "subreddit": "OpenAI",                 "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 8,  "min_score": 100 },
+        { "subreddit": "ChatGPT",                "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 8,  "min_score": 200 },
+        { "subreddit": "SaaS",                   "enabled": true, "sort": "top", "time_filter": "day", "fetch_limit": 8,  "min_score": 50 },
+        { "subreddit": "EntrepreneurRideAlong",  "enabled": true, "sort": "top", "time_filter": "day", "fetch_limit": 8,  "min_score": 30 }
       ],
       "users": [],
-      "fetch_comments": 5
+      "fetch_comments": 3
     }
   },
   "filtering": {
