@@ -191,7 +191,8 @@ class ContentEnricher:
             return
 
         # Combine structured sub-fields into per-language detailed_summary
-        for lang in ("en", "zh"):
+        # Languages must match prompt schema in CONTENT_ENRICHMENT_USER (en + vi for VN radar)
+        for lang in ("en", "vi"):
             if result.get(f"title_{lang}"):
                 val = result[f"title_{lang}"]
                 item.metadata[f"title_{lang}"] = val.get("text") or str(val) if isinstance(val, dict) else str(val)
