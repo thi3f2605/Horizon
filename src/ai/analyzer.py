@@ -36,8 +36,24 @@ class ContentAnalyzer:
         return max(throttle_sec, 0.0)
 
     async def analyze_batch(self, items: List[ContentItem]) -> List[ContentItem]:
+        # Concurrent scoring with bounded concurrency to keep DeepSeek runtime
+        # tractable on GH Actions. throttle_sec gates per-task delay before call.
         throttle_sec = self._get_throttle_sec()
-        analyzed_items = []
+        max_concurrency = 8
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def _task(item: ContentItem) -> ContentItem:
+            async with semaphore:
+                if throttle_sec > 0:
+                    await asyncio.sleep(throttle_sec)
+                try:
+                    await self._analyze_item(item)
+                except Exception as e:
+                    print(f"Error analyzing item {item.id}: {e}")
+                    item.ai_score = 0.0
+                    item.ai_reason = "Analysis failed"
+                    item.ai_summary = item.title
+                return item
 
         with Progress(
             SpinnerColumn(),
@@ -46,23 +62,16 @@ class ContentAnalyzer:
             MofNCompleteColumn(),
             transient=True,
         ) as progress:
-            task = progress.add_task("Analyzing", total=len(items))
+            progress_task = progress.add_task("Analyzing", total=len(items))
 
-            for index, item in enumerate(items):
-                try:
-                    await self._analyze_item(item)
-                    analyzed_items.append(item)
-                except Exception as e:
-                    print(f"Error analyzing item {item.id}: {e}")
-                    item.ai_score = 0.0
-                    item.ai_reason = "Analysis failed"
-                    item.ai_summary = item.title
-                    analyzed_items.append(item)
-                progress.advance(task)
-                if throttle_sec > 0 and index < len(items) - 1:
-                    await asyncio.sleep(throttle_sec)
+            async def _wrapped(item: ContentItem) -> ContentItem:
+                result = await _task(item)
+                progress.advance(progress_task)
+                return result
 
-        return analyzed_items
+            analyzed_items = await asyncio.gather(*(_wrapped(item) for item in items))
+
+        return list(analyzed_items)
 
     @retry(
         stop=stop_after_attempt(3),
