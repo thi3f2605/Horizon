@@ -41,8 +41,12 @@
     });
   }
 
-  /** Set up EN/中文 language toggle as a page-level control */
+  /** VN-only deployment: language toggle disabled. Kept stub for compatibility. */
   function setupLanguageToggle() {
+    return;
+  }
+  // Original toggle code preserved below for reference (unreachable).
+  function _unused_setupLanguageToggle() {
     // Create toggle buttons
     var toggle = document.createElement('div');
     toggle.className = 'lang-toggle';
