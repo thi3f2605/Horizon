@@ -2,7 +2,7 @@ name: Daily Horizon Summary
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # 00:00 UTC = 07:00 VN (UTC+7) every day
+    - cron: '17 0 * * *'  # 00:17 UTC = 07:17 VN (UTC+7) — off-peak to avoid GH Actions schedule delays
   workflow_dispatch:      # Allow manual trigger
 
 jobs:
